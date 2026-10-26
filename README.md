@@ -87,7 +87,7 @@ steps:
 | `skip-labeling`            | If `true`, do not attempt to label the PR.                                                                                             |
 | `changelog-host`           | The proto://host where commits live. Defaults to `${{ github.server_url }}` (usually `https://github.com`)                             |
 | `versioning-strategy`      | The versioning strategy to use. Defaults to `default`                                                                                  |
-| `release-as`               | The version to release as.                                                                                                             |
+| `release-as`               | The version to release as. Overrides configured versions for every package path in manifest mode.                                       |
 
 ## GitHub Credentials
 

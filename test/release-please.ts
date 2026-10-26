@@ -228,6 +228,50 @@ describe('release-please-action', () => {
           .stub(Manifest, 'fromManifest')
           .resolves(fakeManifest);
       });
+      it('applies release-as before generating manifest pull requests', async () => {
+        restoreEnv = mockInputs({
+          'release-as': '10.33.13',
+          'skip-github-release': 'true',
+        });
+        Object.defineProperty(fakeManifest, 'repositoryConfig', {
+          value: {
+            '.': {releaseType: 'python', releaseAs: '10.33.11'},
+            'packages/other': {releaseType: 'node'},
+          },
+        });
+        fakeManifest.createPullRequests.callsFake(async () => {
+          assert.strictEqual(
+            fakeManifest.repositoryConfig['.'].releaseAs,
+            '10.33.13'
+          );
+          assert.strictEqual(
+            fakeManifest.repositoryConfig['packages/other'].releaseAs,
+            '10.33.13'
+          );
+          return [];
+        });
+        await action.main(fetch);
+        sinon.assert.calledOnce(fakeManifest.createPullRequests);
+        sinon.assert.notCalled(fakeManifest.createReleases);
+      });
+      it('preserves configured versions when release-as is omitted', async () => {
+        restoreEnv = mockInputs({'skip-github-release': 'true'});
+        const repositoryConfig: Manifest['repositoryConfig'] = {
+          '.': {releaseType: 'python', releaseAs: '10.33.11'},
+          'packages/other': {releaseType: 'node'},
+        };
+        Object.defineProperty(fakeManifest, 'repositoryConfig', {
+          value: repositoryConfig,
+        });
+        fakeManifest.createPullRequests.resolves([]);
+        await action.main(fetch);
+        assert.deepStrictEqual(fakeManifest.repositoryConfig, repositoryConfig);
+        assert.strictEqual(fakeManifest.repositoryConfig['.'].releaseAs, '10.33.11');
+        assert.strictEqual(
+          fakeManifest.repositoryConfig['packages/other'].releaseAs,
+          undefined
+        );
+      });
       it('loads a manifest from the repository', async () => {
         restoreEnv = mockInputs({});
         fakeManifest.createReleases.resolves([]);
