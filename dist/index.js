@@ -105593,6 +105593,7 @@ function getOptionalBooleanInput(name) {
     }
     return core.getBooleanInput(name);
 }
+/** Load the repository manifest and apply explicit action input overrides. */
 function loadOrBuildManifest(github, inputs) {
     if (inputs.releaseType) {
         core.debug('Building manifest from config');
@@ -105615,6 +105616,11 @@ function loadOrBuildManifest(github, inputs) {
         : {};
     core.debug('Loading manifest from config file');
     return release_please_1.Manifest.fromManifest(github, github.repository.defaultBranch, inputs.configFile, inputs.manifestFile, manifestOverrides).then(manifest => {
+        if (inputs.releaseAs) {
+            for (const path in manifest.repositoryConfig) {
+                manifest.repositoryConfig[path].releaseAs = inputs.releaseAs;
+            }
+        }
         // Override changelogHost for all paths if provided as action input and different from default
         if (inputs.changelogHost && inputs.changelogHost !== DEFAULT_GITHUB_SERVER_URL) {
             core.debug(`Overriding changelogHost to: ${inputs.changelogHost}`);
